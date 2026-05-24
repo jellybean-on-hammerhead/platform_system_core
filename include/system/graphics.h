@@ -13,16 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 #ifndef SYSTEM_CORE_INCLUDE_ANDROID_GRAPHICS_H
 #define SYSTEM_CORE_INCLUDE_ANDROID_GRAPHICS_H
-
 #include <stdint.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif
-
 /*
  * If the HAL needs to create service threads to handle graphics related
  * tasks, these threads need to run at HAL_PRIORITY_URGENT_DISPLAY priority
@@ -34,24 +30,44 @@ extern "C" {
  *      setpriority(PRIO_PROCESS, 0, HAL_PRIORITY_URGENT_DISPLAY);
  *
  */
-
 #define HAL_PRIORITY_URGENT_DISPLAY     (-8)
-
 /**
  * pixel format definitions
  */
-
 enum {
+    /*
+     * "linear" color pixel formats:
+     *
+     * The pixel formats below contain sRGB data but are otherwise treated
+     * as linear formats, i.e.: no special operation is performed when
+     * reading or writing into a buffer in one of these formats
+     */
     HAL_PIXEL_FORMAT_RGBA_8888          = 1,
     HAL_PIXEL_FORMAT_RGBX_8888          = 2,
     HAL_PIXEL_FORMAT_RGB_888            = 3,
     HAL_PIXEL_FORMAT_RGB_565            = 4,
     HAL_PIXEL_FORMAT_BGRA_8888          = 5,
-    HAL_PIXEL_FORMAT_RGBA_5551          = 6,
-    HAL_PIXEL_FORMAT_RGBA_4444          = 7,
-
-    /* 0x8 - 0xFF range unavailable */
-
+    /*
+     * sRGB color pixel formats:
+     *
+     * The red, green and blue components are stored in sRGB space, and converted
+     * to linear space when read, using the standard sRGB to linear equation:
+     *
+     * Clinear = Csrgb / 12.92                  for Csrgb <= 0.04045
+     *         = (Csrgb + 0.055 / 1.055)^2.4    for Csrgb >  0.04045
+     *
+     * When written the inverse transformation is performed:
+     *
+     * Csrgb = 12.92 * Clinear                  for Clinear <= 0.0031308
+     *       = 1.055 * Clinear^(1/2.4) - 0.055  for Clinear >  0.0031308
+     *
+     *
+     *  The alpha component, if present, is always stored in linear space and
+     *  is left unmodified when read or written.
+     *
+     */
+    HAL_PIXEL_FORMAT_sRGB_A_8888        = 0xC,
+    HAL_PIXEL_FORMAT_sRGB_888           = 0xD,
     /*
      * 0x100 - 0x1FF
      *
@@ -62,7 +78,6 @@ enum {
      * gralloc buffer of one of these formats must be supported for use with the
      * GL_OES_EGL_image_external OpenGL ES extension.
      */
-
     /*
      * Android YUV format:
      *
@@ -88,8 +103,6 @@ enum {
      *
      */
     HAL_PIXEL_FORMAT_YV12   = 0x32315659, // YCrCb 4:2:0 Planar
-
-
     /*
      * Android Y8 format:
      *
@@ -112,7 +125,6 @@ enum {
      *
      */
     HAL_PIXEL_FORMAT_Y8     = 0x20203859,
-
     /*
      * Android Y16 format:
      *
@@ -136,7 +148,6 @@ enum {
      *
      */
     HAL_PIXEL_FORMAT_Y16    = 0x20363159,
-
     /*
      * Android RAW sensor format:
      *
@@ -158,7 +169,6 @@ enum {
      * - a horizontal stride multiple of 16 pixels (32 bytes).
      */
     HAL_PIXEL_FORMAT_RAW_SENSOR = 0x20,
-
     /*
      * Android binary blob graphics buffer format:
      *
@@ -173,7 +183,6 @@ enum {
      * size in bytes.
      */
     HAL_PIXEL_FORMAT_BLOB = 0x21,
-
     /*
      * Android format indicating that the choice of format is entirely up to the
      * device-specific Gralloc implementation.
@@ -189,7 +198,6 @@ enum {
      *
      */
     HAL_PIXEL_FORMAT_IMPLEMENTATION_DEFINED = 0x22,
-
     /*
      * Android flexible YCbCr formats
      *
@@ -208,13 +216,11 @@ enum {
      * locking with the (*lock) method will return an error.
      */
     HAL_PIXEL_FORMAT_YCbCr_420_888 = 0x23,
-
     /* Legacy formats (deprecated), used by ImageFormat.java */
     HAL_PIXEL_FORMAT_YCbCr_422_SP       = 0x10, // NV16
     HAL_PIXEL_FORMAT_YCrCb_420_SP       = 0x11, // NV21
     HAL_PIXEL_FORMAT_YCbCr_422_I        = 0x14, // YUY2
 };
-
 /*
  * Structure for describing YCbCr formats for consumption by applications.
  * This is used with HAL_PIXEL_FORMAT_YCbCr_*_888.
@@ -236,7 +242,6 @@ enum {
  * next.  This is 2 bytes for semiplanar (because chroma values are interleaved
  * and each chroma value is one byte) and 1 for planar.
  */
-
 struct android_ycbcr {
     void *y;
     void *cb;
@@ -244,11 +249,9 @@ struct android_ycbcr {
     size_t ystride;
     size_t cstride;
     size_t chroma_step;
-
     /** reserved for future use, set to 0 by gralloc's (*lock_ycbcr)() */
     uint32_t reserved[8];
 };
-
 /**
  * Transformation definitions
  *
@@ -256,7 +259,6 @@ struct android_ycbcr {
  * HAL_TRANSFORM_ROT_90 is applied CLOCKWISE and AFTER HAL_TRANSFORM_FLIP_{H|V}.
  *
  */
-
 enum {
     /* flip source image horizontally (around the vertical axis) */
     HAL_TRANSFORM_FLIP_H    = 0x01,
@@ -269,9 +271,7 @@ enum {
     /* rotate source image 270 degrees clockwise */
     HAL_TRANSFORM_ROT_270   = 0x07,
 };
-
 #ifdef __cplusplus
 }
 #endif
-
 #endif /* SYSTEM_CORE_INCLUDE_ANDROID_GRAPHICS_H */
